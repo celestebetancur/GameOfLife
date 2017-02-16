@@ -92,6 +92,15 @@
 
 score.size() => int VOICES;
 
+// OSC sync 
+OscIn oin;
+OscMsg msg;
+
+7039 => oin.port;
+
+oin.addAddress("/xylife, i i i");
+oin.addAddress("/numCells, i");
+
 ADSR env[VOICES];
 MagicSine sin[VOICES]; //MagicSine chugin for optimization 
 
@@ -119,6 +128,7 @@ function dur Dur(dur beat, int div)
 }
 function void sound (int cell[][], int cellNum)
 {
+    //<<< cellNum >>>;
     for(0 => int i; i < cell[0].cap(); i++)
     {           
         if (cell[0][i] == 0)
@@ -137,8 +147,20 @@ function void sound (int cell[][], int cellNum)
 }
 
 while(true){
-    for(0 => int i; i < VOICES; i++){
-        spork~sound(score[i],i);
+    oin => now;
+    0 => int limit;
+    while ( oin.recv(msg) != 0 )
+    { 
+        if(msg.address == "/numCells") {
+            msg.getInt(0) => limit;
+            for(0 => int i; i < limit; i++){
+                0.8/VOICES => sin[i].gain;
+            }
+            //<<< "NumCells " + limit >>>;
+        }
+        if(msg.address == "/xylife") {
+            //<<< "x: "+ msg.getInt(0) + " y: "+ msg.getInt(1) + " life: " + msg.getInt(2) >>>;
+            spork~sound(score[msg.getInt(2)],msg.getInt(2)); 
+        }
     }
-    Dur(BEAT,1) => now;
 }
