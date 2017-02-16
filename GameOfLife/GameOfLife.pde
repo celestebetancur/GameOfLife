@@ -24,16 +24,6 @@ int g = int(random(255));
 int b = int(random(255));
 color Human = color(r,g,b);
 
-/*color Human = color(125,125,125);
-color alive1 = color(255, 0, 0);
-color alive2 = color(255, 127, 0);
-color alive3 = color(255, 255, 0);
-color alive4 = color(0, 255, 0);
-color alive5 = color(0, 0, 255);
-color alive6 = color(75, 0, 130);
-color alive7 = color(143, 0, 255);
-color Buda = color(255, 255, 255);*/
-
 color dead = color(0);
 
 // Array of cells
@@ -84,33 +74,6 @@ void draw() {
   for (int x=0; x<width/cellSize; x++) {
     for (int y=0; y<height/cellSize; y++) {
       if (cells[x][y]==1) {
-        /*if (cellLifes[x][y]==1) {
-          fill(Human);
-        }
-        if (cellLifes[x][y]==2) {
-          fill(alive1);
-        }
-        if (cellLifes[x][y]==3) {
-          fill(alive2);
-        }
-        if (cellLifes[x][y]==4) {
-          fill(alive3);
-        }
-        if (cellLifes[x][y]==5) {
-          fill(alive4);
-        }
-        if (cellLifes[x][y]==6) {
-          fill(alive5);
-        }
-        if (cellLifes[x][y]==7) {
-          fill(alive6);
-        }
-        if (cellLifes[x][y]==8) {
-          fill(alive7);
-        }
-        if (cellLifes[x][y] >= 9) {
-          fill(Buda);
-        }*/
         Human = color(r,g,b,cellLifes[x][y]);
         fill(Human);
       }
