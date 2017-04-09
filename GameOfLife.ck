@@ -221,8 +221,7 @@
 [[0,35,35,43,43],[2,8,8,8,8]],[[0,38,38,43,43],[2,8,8,8,8]],[[0,41,41,45,45],[2,8,8,8,8]],[[0,47,45,43],[0,3,16,16]],
 [[41,38,45],[4,4,2]],[[47,45,43,43,45,47],[8,8,4,8,4,8]],[[45,45,47,49],[2,8,4,8]],[[47,47,45,43],[2,8,4,8]],
 [[45,49,47,45],[2,8,4,8]],[[47,43,43,45],[2,6,16,4]],[[45,43,45,47,41,41,43],[8,8,8,8,6,16,4]],[[43,41,43,45,47,47,49],[8,8,8,8,6,16,4]],
-[[49,47,45,43,43],[8,8,8,8,2]],[[43,47],[2,2]],[[47,45],[2,2]],[[45,49],[2,2]],[[49,43,41],[2,4,4]]
-] @=> int score[][][];
+[[49,47,45,43,43],[8,8,8,8,2]],[[43,47],[2,2]],[[47,45],[2,2]],[[45,49],[2,2]],[[49,43,41],[2,4,4]]] @=> int score[][][];
 
 220 => int VOICES;
 
@@ -235,15 +234,19 @@ OscMsg msg;
 oin.addAddress("/xylife, i i i");
 oin.addAddress("/numCells, i");
 
+Gain left => JCRev revL => dac.left;
+Gain right => JCRev revR => dac.right;
 ADSR env[VOICES];
 MagicSine sin[VOICES]; //MagicSine chugin for optimization 
 
 for(0 => int i; i < sin.cap(); i++){
     0.8/VOICES => sin[i].gain;
     env[i].set(20::ms, 20::ms, .4, 60::ms);
-    sin[i] => env[i] => dac;
+    sin[i] => env[i];
 }
 
+0.15 => revL.mix;
+0.15 => revR.mix;
 113 => int beat;
 convert(beat) => dur BEAT;
 
@@ -280,22 +283,47 @@ function void sound (int cell[][], int cellNum)
     }
 }
 
-int life[0];
 0 => int limit;
 
 while(true){
     oin => now;
+    //<<< msg.getInt(2) >>>;
     while ( oin.recv(msg) != 0 )
     { 
         if(msg.address == "/numCells") {
             msg.getInt(0) => limit;
             //<<< "NumCells " + limit >>>;
+            for(0 => int i; i < sin.cap(); i++){
+                0.8/limit => sin[i].gain;
+            }
         }
-        if(msg.address == "/xylife") {
+        if(msg.address == "/xylife" && msg.getInt(2) < 24) {
             //life << msg.getInt(2);
-            msg.getInt(2) => int num;
-            spork~sound(score[num],num);
+            msg.getInt(2) => int life;
+            msg.getInt(0)+ msg.getInt(1) => int OSC;
+            if(life < 4) {
+                env[OSC].set(100::ms, 30::ms, .35, 50::ms);
+            }
+            if(life > 4 && life < 10) {
+                env[OSC].set(40::ms, 30::ms, .5, 60::ms);
+            }
+            if(life > 10) {
+                env[OSC].set(10::ms, 10::ms, .5, 40::ms);
+            }
+            if(msg.getInt(1) < 14) {
+                env[OSC] =< right;
+                env[OSC] => left;
+            }
+            if(msg.getInt(1) >= 14) {
+                env[OSC] =< left;
+                env[OSC] => right;
+            }
+            spork~sound(score[life*Math.random2(0,33)],OSC);
             //<<< "x: "+ msg.getInt(0) + " y: "+ msg.getInt(1) + " life: " + msg.getInt(2) >>>;
+        }
+        if(msg.address == "/xylife" && msg.getInt(2) >= 24 ){
+            msg.getInt(0)+ msg.getInt(1) => int OSC;
+            spork~sound(score[24*Math.random2(0,33)],OSC);
         }
     }
 }
